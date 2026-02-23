@@ -173,6 +173,30 @@ body {
     text-align: center;
 }
 
+/* Language toggle */
+.lang-toggle {
+    display: flex; gap: 8px;
+    align-self: flex-end;
+    margin-bottom: -8px;
+}
+.lang-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 3px solid #EDE4D9;
+    background: var(--surface);
+    font-size: 22px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .12s, border-color .2s, box-shadow .2s;
+    box-shadow: var(--shadow-soft);
+    padding: 0;
+}
+.lang-btn:active { transform: scale(.9); }
+.lang-btn.active {
+    border-color: var(--sky);
+    box-shadow: 0 0 0 3px var(--sky-glow), var(--shadow-soft);
+}
+
 /* ==================== GAME SCREEN ==================== */
 .game-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -594,29 +618,33 @@ body {
 <div id="app">
     <!-- ===== MENU ===== -->
     <div id="screen-menu" class="screen active">
-        <div class="menu-title">William's<br>Number Adventure!</div>
-        <div class="menu-subtitle">Tap a game to play!</div>
+        <div class="lang-toggle">
+            <button class="lang-btn" data-lang="en" onclick="setLang('en')">🇬🇧</button>
+            <button class="lang-btn" data-lang="ro" onclick="setLang('ro')">🇷🇴</button>
+        </div>
+        <div class="menu-title" id="t-title"></div>
+        <div class="menu-subtitle" id="t-subtitle"></div>
         <div class="menu-cards">
             <button class="menu-card card-learn" onclick="startGame('learn')">
                 <span class="card-emoji">🔢</span>
-                <span>Learn Numbers</span>
+                <span id="t-learn"></span>
             </button>
             <button class="menu-card card-add" onclick="startGame('add')">
                 <span class="card-emoji">🧩</span>
-                <span>Addition</span>
+                <span id="t-add"></span>
             </button>
             <button class="menu-card card-sub" onclick="startGame('subtract')">
                 <span class="card-emoji">🎈</span>
-                <span>Subtraction</span>
+                <span id="t-sub"></span>
             </button>
         </div>
-        <div class="menu-footer">Made with love for William</div>
+        <div class="menu-footer" id="t-footer"></div>
     </div>
 
     <!-- ===== GAME ===== -->
     <div id="screen-game" class="screen">
         <div class="game-header">
-            <button class="back-btn" onclick="goMenu()">&#8592; Back</button>
+            <button class="back-btn" id="t-back" onclick="goMenu()"></button>
             <div class="stars-row" id="hud-stars"></div>
             <div class="progress-text" id="hud-progress"></div>
         </div>
@@ -629,7 +657,7 @@ body {
         <div class="summary-title" id="summary-title"></div>
         <div class="summary-subtitle" id="summary-subtitle"></div>
         <div class="summary-stars-row" id="summary-stars"></div>
-        <button class="play-again-btn" onclick="goMenu()">Play Again!</button>
+        <button class="play-again-btn" id="t-play-again" onclick="goMenu()"></button>
     </div>
 </div>
 
@@ -640,6 +668,76 @@ body {
 <div class="feedback-msg" id="feedback"></div>
 
 <script>
+/* ==================== I18N ==================== */
+const I18N = {
+    en: {
+        title: "William's<br>Number Game!",
+        subtitle: "Tap a game to play!",
+        learn: "Learn Numbers",
+        add: "Addition",
+        subtract: "Subtraction",
+        footer: "Made with love for William",
+        back: "\u2190 Back",
+        playAgain: "Play Again!",
+        howMany: "How many {e} do you see?",
+        correctMsgs: ['Awesome!', 'Great job!', 'Yay!', 'Super!', 'Woohoo!', 'Perfect!'],
+        wrongMsgs: ['Try again!', 'Almost!', 'One more try!', 'Not quite!'],
+        amazing: 'Amazing!', superstar: "You're a superstar!",
+        great: 'Great job!', soWell: 'You did so well!',
+        good: 'Good work!', practice: 'Keep practicing!',
+        nice: 'Nice try!', again: "Let's play again!",
+    },
+    ro: {
+        title: "Jocul cu Numere<br>a lui William!",
+        subtitle: "Alege un joc!",
+        learn: "Numere",
+        add: "Adunare",
+        subtract: "Sc\u0103dere",
+        footer: "F\u0103cut cu dragoste pentru William",
+        back: "\u2190 \u00cenapoi",
+        playAgain: "Joac\u0103 din nou!",
+        howMany: "C\u00e2te {e} vezi?",
+        correctMsgs: ['Bravo!', 'Foarte bine!', 'Ura!', 'Super!', 'Minunat!', 'Perfect!'],
+        wrongMsgs: ['Mai \u00eencearc\u0103!', 'Aproape!', '\u00cenc\u0103 o dat\u0103!', 'Nu chiar!'],
+        amazing: 'Extraordinar!', superstar: 'E\u0219ti o super stea!',
+        great: 'Foarte bine!', soWell: 'Te-ai descurcat super!',
+        good: 'Bun\u0103 treab\u0103!', practice: 'Continu\u0103 s\u0103 exersezi!',
+        nice: 'Bun\u0103 \u00eencercare!', again: 'Hai s\u0103 juc\u0103m din nou!',
+    }
+};
+
+let currentLang = localStorage.getItem('wm-lang') || 'en';
+
+function t(key) { return I18N[currentLang][key] || I18N.en[key] || key; }
+
+function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('wm-lang', lang);
+    audio.init();
+    audio.menuTap();
+    renderTexts();
+}
+
+function renderTexts() {
+    // Menu
+    document.getElementById('t-title').innerHTML = t('title');
+    document.getElementById('t-subtitle').textContent = t('subtitle');
+    document.getElementById('t-learn').textContent = t('learn');
+    document.getElementById('t-add').textContent = t('add');
+    document.getElementById('t-sub').textContent = t('subtract');
+    document.getElementById('t-footer').textContent = t('footer');
+    // Game
+    document.getElementById('t-back').textContent = t('back');
+    // Summary
+    document.getElementById('t-play-again').textContent = t('playAgain');
+    // Lang toggle highlight
+    document.querySelectorAll('.lang-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === currentLang);
+    });
+    // Update html lang attribute
+    document.documentElement.lang = currentLang;
+}
+
 /* ==================== CONSTANTS ==================== */
 const EMOJIS = {
     animals: ['\u{1F431}','\u{1F436}','\u{1F438}','\u{1F430}','\u{1F43B}','\u{1F98A}','\u{1F437}','\u{1F42E}','\u{1F435}','\u{1F981}'],
@@ -820,7 +918,7 @@ function setupLearn() {
     const emoji = pickEmoji();
     const area = document.getElementById('game-area');
 
-    let html = `<div class="instruction">How many ${emoji} do you see?</div>`;
+    let html = `<div class="instruction">${t('howMany').replace('{e}', emoji)}</div>`;
     html += `<div class="objects-grid">`;
     for (let i = 0; i < num; i++) {
         const delay = i * 60;
@@ -972,11 +1070,11 @@ function showFeedback(correct) {
     const el = document.getElementById('feedback');
     el.className = 'feedback-msg';
     if (correct) {
-        const msgs = ['Awesome!', 'Great job!', 'Yay!', 'Super!', 'Woohoo!', 'Perfect!'];
+        const msgs = t('correctMsgs');
         el.textContent = msgs[Math.floor(Math.random() * msgs.length)] + ' \u2B50';
         el.classList.add('feedback-correct');
     } else {
-        const msgs = ['Try again!', 'Almost!', 'One more try!', 'Not quite!'];
+        const msgs = t('wrongMsgs');
         el.textContent = msgs[Math.floor(Math.random() * msgs.length)] + ' \u{1F60A}';
         el.classList.add('feedback-wrong');
     }
@@ -1022,13 +1120,13 @@ function endGame() {
     const pct = G.stars / TOTAL_ROUNDS;
     let emoji, title, subtitle;
     if (pct >= .9) {
-        emoji = '\u{1F3C6}'; title = 'Amazing!'; subtitle = 'You\'re a superstar!';
+        emoji = '\u{1F3C6}'; title = t('amazing'); subtitle = t('superstar');
     } else if (pct >= .7) {
-        emoji = '\u{1F31F}'; title = 'Great job!'; subtitle = 'You did so well!';
+        emoji = '\u{1F31F}'; title = t('great'); subtitle = t('soWell');
     } else if (pct >= .5) {
-        emoji = '\u{1F60A}'; title = 'Good work!'; subtitle = 'Keep practicing!';
+        emoji = '\u{1F60A}'; title = t('good'); subtitle = t('practice');
     } else {
-        emoji = '\u{1F496}'; title = 'Nice try!'; subtitle = 'Let\'s play again!';
+        emoji = '\u{1F496}'; title = t('nice'); subtitle = t('again');
     }
 
     document.getElementById('summary-emoji').textContent = emoji;
@@ -1049,7 +1147,7 @@ function endGame() {
 }
 
 /* ==================== INIT ==================== */
-// Ensure audio context starts on first interaction
+renderTexts();
 document.addEventListener('pointerdown', () => audio.init(), { once: true });
 </script>
 </body>

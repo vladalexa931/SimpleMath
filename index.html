@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>William's Number Adventure!</title>
+<style>
+/* ==================== RESET & VARIABLES ==================== */
+:root {
+    --bg-warm: #FEF5E7;
+    --bg-end: #FDEBD0;
+    --surface: #FFFFFF;
+    --text: #3D2B1F;
+    --text-soft: #7B6B5A;
+
+    --coral: #FF6B6B;
+    --coral-glow: #FF8E8E;
+    --sunflower: #FECA57;
+    --sunflower-glow: #FFD873;
+    --sky: #48DBFB;
+    --sky-glow: #74E4FC;
+    --mint: #1DD1A1;
+    --mint-glow: #55E6BE;
+    --purple: #A55EEA;
+    --purple-glow: #BE88F0;
+    --orange: #FF9F43;
+    --orange-glow: #FFB76B;
+    --cherry: #E84393;
+
+    --shadow-soft: 0 4px 15px rgba(61,43,31,.1);
+    --shadow-md: 0 6px 20px rgba(61,43,31,.15);
+    --shadow-lg: 0 10px 35px rgba(61,43,31,.2);
+    --shadow-btn: 0 6px 0;
+
+    --r-sm: 14px;
+    --r-md: 22px;
+    --r-lg: 32px;
+    --r-xl: 42px;
+
+    --font: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', 'Patrick Hand', cursive, sans-serif;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+    height: 100%; overflow: hidden;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none; -webkit-user-select: none;
+}
+
+body {
+    font-family: var(--font);
+    background: linear-gradient(150deg, var(--bg-warm) 0%, var(--bg-end) 100%);
+    color: var(--text);
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* ==================== BACKGROUND SHAPES ==================== */
+.bg-shapes { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.bg-shape {
+    position:absolute; border-radius:50%; opacity:.08;
+    animation: bgFloat linear infinite;
+}
+.bg-shape:nth-child(1) { width:200px; height:200px; background:var(--coral); top:-50px; left:10%; animation-duration:25s; }
+.bg-shape:nth-child(2) { width:300px; height:300px; background:var(--sky); bottom:-80px; right:5%; animation-duration:30s; animation-delay:-5s; }
+.bg-shape:nth-child(3) { width:150px; height:150px; background:var(--sunflower); top:40%; left:-40px; animation-duration:20s; animation-delay:-10s; }
+.bg-shape:nth-child(4) { width:250px; height:250px; background:var(--mint); bottom:10%; left:60%; animation-duration:35s; animation-delay:-15s; }
+.bg-shape:nth-child(5) { width:180px; height:180px; background:var(--purple); top:20%; right:-30px; animation-duration:28s; animation-delay:-8s; }
+
+@keyframes bgFloat {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    25% { transform: translate(30px,-20px) scale(1.05); }
+    50% { transform: translate(-20px,30px) scale(.95); }
+    75% { transform: translate(20px,20px) scale(1.02); }
+}
+
+/* ==================== APP CONTAINER ==================== */
+#app {
+    width: 100%; max-width: 560px;
+    height: 100vh; height: 100dvh;
+    position: relative; z-index: 1; overflow: hidden;
+}
+
+/* ==================== SCREEN MANAGEMENT ==================== */
+.screen {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center;
+    opacity:0; pointer-events:none;
+    transition: opacity .35s ease, transform .35s ease;
+    transform: translateY(15px);
+    padding: 16px;
+    overflow-y: auto;
+}
+.screen.active {
+    opacity:1; pointer-events:auto; transform:translateY(0);
+}
+
+/* ==================== MENU SCREEN ==================== */
+.menu-title {
+    font-size: clamp(28px, 7vw, 44px);
+    font-weight: 700;
+    text-align: center;
+    margin: 30px 0 8px;
+    color: var(--text);
+    text-shadow: 2px 2px 0 var(--sunflower);
+    line-height: 1.2;
+}
+.menu-subtitle {
+    font-size: clamp(14px, 3.5vw, 18px);
+    color: var(--text-soft);
+    margin-bottom: 30px;
+    text-align: center;
+}
+.menu-cards {
+    display: flex; flex-direction: column; gap: 16px;
+    width: 100%; max-width: 400px;
+}
+.menu-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 24px;
+    border: none; border-radius: var(--r-lg);
+    font-family: var(--font);
+    font-size: clamp(18px, 4.5vw, 24px);
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+    text-shadow: 1px 1px 2px rgba(0,0,0,.15);
+    min-height: 80px;
+    position: relative;
+    overflow: hidden;
+}
+.menu-card::after {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(255,255,255,.15) 0%, transparent 50%);
+    border-radius: inherit; pointer-events:none;
+}
+.menu-card:active { transform: scale(.96); }
+.menu-card .card-emoji {
+    font-size: clamp(32px, 8vw, 48px);
+    text-shadow: none;
+    flex-shrink: 0;
+    animation: cardEmojiBob 3s ease-in-out infinite;
+}
+.menu-card:nth-child(1) .card-emoji { animation-delay: 0s; }
+.menu-card:nth-child(2) .card-emoji { animation-delay: -1s; }
+.menu-card:nth-child(3) .card-emoji { animation-delay: -2s; }
+
+@keyframes cardEmojiBob {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-5px) rotate(5deg); }
+}
+
+.card-learn {
+    background: linear-gradient(135deg, var(--sky) 0%, #3BAFDA 100%);
+    box-shadow: var(--shadow-btn) #2E86AB, var(--shadow-md);
+}
+.card-add {
+    background: linear-gradient(135deg, var(--mint) 0%, #10AC84 100%);
+    box-shadow: var(--shadow-btn) #0E8C6B, var(--shadow-md);
+}
+.card-sub {
+    background: linear-gradient(135deg, var(--orange) 0%, #EE8B2F 100%);
+    box-shadow: var(--shadow-btn) #C77526, var(--shadow-md);
+}
+.menu-footer {
+    margin-top: auto;
+    padding: 16px 0;
+    font-size: 13px;
+    color: var(--text-soft);
+    opacity: .6;
+    text-align: center;
+}
+
+/* ==================== GAME SCREEN ==================== */
+.game-header {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: 4px 0 10px;
+    flex-shrink: 0;
+}
+.back-btn {
+    font-family: var(--font); font-size: 16px; font-weight: 700;
+    background: var(--surface); color: var(--text-soft);
+    border: 2px solid #E8DDD0; border-radius: var(--r-md);
+    padding: 8px 16px; cursor: pointer;
+    transition: transform .12s;
+}
+.back-btn:active { transform: scale(.93); }
+.stars-row {
+    display: flex; gap: 3px; font-size: 22px;
+}
+.star-icon { transition: transform .3s ease; display: inline-block; }
+.star-icon.earned { animation: starPop .4s ease; }
+@keyframes starPop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+.progress-text {
+    font-size: 14px; color: var(--text-soft); font-weight: 600;
+    background: var(--surface); padding: 6px 14px;
+    border-radius: var(--r-sm); border: 2px solid #E8DDD0;
+}
+
+/* ==================== GAME AREA ==================== */
+.game-area {
+    flex: 1; width: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 16px;
+    min-height: 0;
+    padding: 4px 0;
+}
+
+/* Big number display */
+.big-number {
+    font-size: clamp(64px, 18vw, 100px);
+    font-weight: 700;
+    line-height: 1;
+    width: clamp(90px, 22vw, 130px);
+    height: clamp(90px, 22vw, 130px);
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--r-xl);
+    color: white;
+    text-shadow: 2px 3px 0 rgba(0,0,0,.12);
+    animation: numberPop .4s cubic-bezier(.34,1.56,.64,1);
+    flex-shrink: 0;
+}
+.big-number.theme-sky { background: linear-gradient(135deg, var(--sky), #3BAFDA); box-shadow: 0 6px 0 #2E86AB; }
+.big-number.theme-mint { background: linear-gradient(135deg, var(--mint), #10AC84); box-shadow: 0 6px 0 #0E8C6B; }
+.big-number.theme-orange { background: linear-gradient(135deg, var(--orange), #EE8B2F); box-shadow: 0 6px 0 #C77526; }
+
+@keyframes numberPop {
+    0% { transform: scale(0) rotate(-10deg); }
+    70% { transform: scale(1.1) rotate(3deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+
+/* Instruction text */
+.instruction {
+    font-size: clamp(16px, 4vw, 22px);
+    color: var(--text-soft);
+    font-weight: 600;
+    text-align: center;
+}
+.tap-counter {
+    font-size: clamp(18px, 4.5vw, 24px);
+    font-weight: 700;
+    color: var(--text);
+    background: var(--surface);
+    padding: 6px 20px;
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-soft);
+}
+
+/* Objects grid */
+.objects-grid {
+    display: flex; flex-wrap: wrap;
+    justify-content: center; align-items: center;
+    gap: clamp(8px, 2vw, 14px);
+    padding: 10px;
+    max-width: 100%;
+}
+.obj-item {
+    font-size: clamp(36px, 10vw, 54px);
+    width: clamp(56px, 14vw, 76px);
+    height: clamp(56px, 14vw, 76px);
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface);
+    border: 3px solid #EDE4D9;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: transform .15s ease, border-color .2s, background .2s, box-shadow .2s;
+    animation: objAppear .35s cubic-bezier(.34,1.56,.64,1) backwards;
+    position: relative;
+}
+.obj-item:active { transform: scale(.9); }
+.obj-item.tapped {
+    border-color: var(--sunflower);
+    background: #FFF9E6;
+    box-shadow: 0 0 0 3px var(--sunflower-glow), var(--shadow-soft);
+    transform: scale(1);
+    cursor: default;
+}
+.obj-item.tapped::after {
+    content: '\2713';
+    position: absolute;
+    bottom: -2px; right: -2px;
+    width: 22px; height: 22px;
+    background: var(--mint);
+    color: white; font-size: 13px; font-weight: 700;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    animation: checkPop .3s ease;
+}
+@keyframes objAppear {
+    0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes checkPop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+/* Non-tappable objects in math mode */
+.obj-item.static {
+    cursor: default;
+    width: clamp(40px, 10vw, 54px);
+    height: clamp(40px, 10vw, 54px);
+    font-size: clamp(26px, 7vw, 38px);
+    border-width: 2px;
+}
+.obj-item.static:active { transform: scale(1); }
+.obj-item.crossed {
+    opacity: .35;
+    border-color: var(--coral);
+    background: #FFF0F0;
+    text-decoration: line-through;
+    position: relative;
+}
+.obj-item.crossed::before {
+    content:'✕';
+    position:absolute;
+    font-size: clamp(28px, 8vw, 42px);
+    color: var(--coral);
+    font-weight: 700;
+    opacity: .7;
+    animation: crossAppear .3s ease backwards;
+}
+@keyframes crossAppear {
+    0% { transform: scale(0) rotate(-90deg); opacity:0; }
+    100% { transform: scale(1) rotate(0); opacity:.7; }
+}
+
+/* ==================== MATH EQUATION DISPLAY ==================== */
+.equation-visual {
+    display: flex; align-items: center; justify-content: center;
+    gap: clamp(6px, 2vw, 14px);
+    flex-wrap: wrap;
+    width: 100%;
+}
+.eq-group {
+    display: flex; flex-wrap: wrap;
+    justify-content: center; gap: clamp(4px, 1.2vw, 8px);
+    padding: 8px;
+    background: rgba(255,255,255,.6);
+    border-radius: var(--r-md);
+    border: 2px dashed #E0D5C8;
+}
+.eq-operator {
+    font-size: clamp(32px, 8vw, 48px);
+    font-weight: 700;
+    color: var(--text-soft);
+    display: flex; align-items: center;
+    flex-shrink: 0;
+}
+.eq-equals {
+    font-size: clamp(32px, 8vw, 48px);
+    font-weight: 700;
+    color: var(--text-soft);
+}
+.eq-question {
+    font-size: clamp(40px, 10vw, 60px);
+    font-weight: 700;
+    color: var(--coral);
+    animation: questionPulse 1.5s ease-in-out infinite;
+}
+@keyframes questionPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Numeric equation row */
+.equation-numbers {
+    display: flex; align-items: center; justify-content: center;
+    gap: clamp(8px, 2.5vw, 16px);
+    font-size: clamp(28px, 7vw, 42px);
+    font-weight: 700;
+    color: var(--text);
+}
+.eq-num {
+    background: var(--surface);
+    padding: 4px 16px;
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-soft);
+}
+
+/* ==================== ANSWER BUTTONS ==================== */
+.answers-row {
+    display: flex; gap: clamp(10px, 3vw, 18px);
+    justify-content: center;
+    padding: 8px 0;
+    flex-shrink: 0;
+}
+.answer-btn {
+    font-family: var(--font);
+    font-size: clamp(28px, 7vw, 42px);
+    font-weight: 700;
+    color: white;
+    width: clamp(72px, 20vw, 100px);
+    height: clamp(72px, 20vw, 100px);
+    border: none;
+    border-radius: var(--r-lg);
+    cursor: pointer;
+    transition: transform .1s ease;
+    text-shadow: 1px 2px 0 rgba(0,0,0,.12);
+    position: relative;
+    overflow: hidden;
+}
+.answer-btn::after {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(255,255,255,.2) 0%, transparent 50%);
+    border-radius: inherit; pointer-events:none;
+}
+.answer-btn:active { transform: scale(.92) translateY(3px); }
+.answer-btn.opt-a { background: linear-gradient(135deg, var(--coral), #E05555); box-shadow: 0 5px 0 #C04444, var(--shadow-soft); }
+.answer-btn.opt-b { background: linear-gradient(135deg, var(--purple), #8854D0); box-shadow: 0 5px 0 #6E3FB5, var(--shadow-soft); }
+.answer-btn.opt-c { background: linear-gradient(135deg, var(--sky), #3BAFDA); box-shadow: 0 5px 0 #2E86AB, var(--shadow-soft); }
+
+.answer-btn.correct-flash {
+    animation: correctFlash .5s ease;
+    background: linear-gradient(135deg, var(--mint), #10AC84) !important;
+    box-shadow: 0 5px 0 #0E8C6B, 0 0 20px var(--mint-glow) !important;
+}
+.answer-btn.wrong-shake {
+    animation: wrongShake .4s ease;
+}
+@keyframes correctFlash {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+@keyframes wrongShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+}
+
+/* ==================== FEEDBACK ==================== */
+.feedback-msg {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: clamp(22px, 6vw, 32px);
+    font-weight: 700;
+    padding: 14px 28px;
+    border-radius: var(--r-lg);
+    z-index: 100;
+    pointer-events: none;
+    white-space: nowrap;
+}
+.feedback-msg.show {
+    animation: feedbackPop .6s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes feedbackPop {
+    0% { transform: translate(-50%,-50%) scale(0); opacity:0; }
+    50% { transform: translate(-50%,-50%) scale(1.1); opacity:1; }
+    80% { transform: translate(-50%,-50%) scale(1); opacity:1; }
+    100% { transform: translate(-50%,-50%) scale(.9); opacity:0; }
+}
+.feedback-correct {
+    background: var(--mint); color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,.15);
+    box-shadow: 0 0 30px var(--mint-glow);
+}
+.feedback-wrong {
+    background: var(--sunflower); color: var(--text);
+    box-shadow: 0 0 30px var(--sunflower-glow);
+}
+
+/* ==================== CELEBRATION OVERLAY ==================== */
+.celebration-layer {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 200;
+    overflow: hidden;
+}
+.confetti-piece {
+    position: absolute;
+    width: var(--size);
+    height: var(--size);
+    background: var(--color);
+    border-radius: 2px;
+    top: 50%; left: 50%;
+    animation: confettiBurst var(--duration) cubic-bezier(.15,.6,.35,1) forwards;
+    animation-delay: var(--delay);
+    opacity: 0;
+}
+@keyframes confettiBurst {
+    0% { transform: translate(-50%,-50%) rotate(0) scale(0); opacity:1; }
+    20% { opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(1); opacity:0; }
+}
+
+.big-emoji-burst {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%) scale(0);
+    font-size: clamp(60px, 18vw, 90px);
+    z-index: 201; pointer-events: none;
+    animation: bigEmojiBurst .8s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes bigEmojiBurst {
+    0% { transform: translate(-50%,-50%) scale(0) rotate(-20deg); opacity:0; }
+    50% { transform: translate(-50%,-50%) scale(1.2) rotate(5deg); opacity:1; }
+    75% { transform: translate(-50%,-50%) scale(1) rotate(0); opacity:1; }
+    100% { transform: translate(-50%,-50%) scale(.8) rotate(0); opacity:0; }
+}
+
+/* ==================== SUMMARY SCREEN ==================== */
+.summary-emoji {
+    font-size: clamp(60px, 16vw, 90px);
+    margin: 20px 0;
+    animation: summaryBounce 1s ease-in-out infinite;
+}
+@keyframes summaryBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+.summary-title {
+    font-size: clamp(28px, 7vw, 40px);
+    font-weight: 700;
+    text-align: center;
+    color: var(--text);
+    text-shadow: 2px 2px 0 var(--sunflower);
+    margin-bottom: 8px;
+}
+.summary-subtitle {
+    font-size: clamp(16px, 4vw, 20px);
+    color: var(--text-soft);
+    margin-bottom: 24px;
+}
+.summary-stars-row {
+    display: flex; gap: 6px;
+    font-size: clamp(28px, 7vw, 40px);
+    margin-bottom: 32px;
+    flex-wrap: wrap; justify-content: center;
+}
+.summary-star {
+    animation: summaryStarPop .4s cubic-bezier(.34,1.56,.64,1) backwards;
+}
+.play-again-btn {
+    font-family: var(--font);
+    font-size: clamp(20px, 5vw, 26px);
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, var(--coral), #E05555);
+    border: none;
+    border-radius: var(--r-lg);
+    padding: 16px 40px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #C04444, var(--shadow-md);
+    transition: transform .12s;
+    text-shadow: 1px 1px 2px rgba(0,0,0,.12);
+}
+.play-again-btn:active { transform: scale(.95) translateY(3px); }
+
+@keyframes summaryStarPop {
+    0% { transform: scale(0) rotate(-30deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-height: 600px) {
+    .menu-title { margin-top: 12px; margin-bottom: 4px; }
+    .menu-subtitle { margin-bottom: 14px; }
+    .menu-card { min-height: 64px; padding: 14px 20px; }
+    .big-number { width: 70px; height: 70px; font-size: 50px; }
+    .obj-item { width: 48px; height: 48px; font-size: 30px; }
+    .obj-item.static { width: 36px; height: 36px; font-size: 22px; }
+    .answer-btn { width: 66px; height: 66px; font-size: 28px; }
+    .game-area { gap: 8px; }
+}
+@media (min-width: 768px) and (min-height: 900px) {
+    .menu-card { min-height: 96px; padding: 24px 28px; }
+    .obj-item { width: 78px; height: 78px; font-size: 52px; }
+    .answer-btn { width: 110px; height: 110px; font-size: 46px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Animated background -->
+<div class="bg-shapes">
+    <div class="bg-shape"></div>
+    <div class="bg-shape"></div>
+    <div class="bg-shape"></div>
+    <div class="bg-shape"></div>
+    <div class="bg-shape"></div>
+</div>
+
+<div id="app">
+    <!-- ===== MENU ===== -->
+    <div id="screen-menu" class="screen active">
+        <div class="menu-title">William's<br>Number Adventure!</div>
+        <div class="menu-subtitle">Tap a game to play!</div>
+        <div class="menu-cards">
+            <button class="menu-card card-learn" onclick="startGame('learn')">
+                <span class="card-emoji">🔢</span>
+                <span>Learn Numbers</span>
+            </button>
+            <button class="menu-card card-add" onclick="startGame('add')">
+                <span class="card-emoji">🧩</span>
+                <span>Addition</span>
+            </button>
+            <button class="menu-card card-sub" onclick="startGame('subtract')">
+                <span class="card-emoji">🎈</span>
+                <span>Subtraction</span>
+            </button>
+        </div>
+        <div class="menu-footer">Made with love for William</div>
+    </div>
+
+    <!-- ===== GAME ===== -->
+    <div id="screen-game" class="screen">
+        <div class="game-header">
+            <button class="back-btn" onclick="goMenu()">&#8592; Back</button>
+            <div class="stars-row" id="hud-stars"></div>
+            <div class="progress-text" id="hud-progress"></div>
+        </div>
+        <div class="game-area" id="game-area"></div>
+    </div>
+
+    <!-- ===== SUMMARY ===== -->
+    <div id="screen-summary" class="screen">
+        <div class="summary-emoji" id="summary-emoji"></div>
+        <div class="summary-title" id="summary-title"></div>
+        <div class="summary-subtitle" id="summary-subtitle"></div>
+        <div class="summary-stars-row" id="summary-stars"></div>
+        <button class="play-again-btn" onclick="goMenu()">Play Again!</button>
+    </div>
+</div>
+
+<!-- Celebration layer -->
+<div class="celebration-layer" id="celebration"></div>
+
+<!-- Feedback message -->
+<div class="feedback-msg" id="feedback"></div>
+
+<script>
+/* ==================== CONSTANTS ==================== */
+const EMOJIS = {
+    animals: ['\u{1F431}','\u{1F436}','\u{1F438}','\u{1F430}','\u{1F43B}','\u{1F98A}','\u{1F437}','\u{1F42E}','\u{1F435}','\u{1F981}'],
+    fruits:  ['\u{1F34E}','\u{1F34A}','\u{1F34B}','\u{1F347}','\u{1F353}','\u{1F352}','\u{1F351}','\u{1F34C}','\u{1F95D}','\u{1F350}'],
+    nature:  ['\u{1F338}','\u{1F33A}','\u{1F33B}','\u{1F337}','\u{1F339}','\u{2B50}','\u{1F31F}','\u{1F308}','\u{1F33F}','\u{1F340}'],
+    treats:  ['\u{1F36A}','\u{1F9C1}','\u{1F369}','\u{1F36D}','\u{1F36C}','\u{1F382}','\u{1F370}','\u{1F36B}','\u{1F9C7}','\u{1F368}'],
+    fun:     ['\u{1F388}','\u{1F380}','\u{1F48E}','\u{1F3A8}','\u{1F3AF}','\u{1F3B8}','\u{1F3B2}','\u{1F381}','\u{1F3AA}','\u{1F680}']
+};
+const EMOJI_CATEGORIES = Object.keys(EMOJIS);
+const CELEBRATION_EMOJIS = ['\u{1F389}','\u{1F38A}','\u{2B50}','\u{1F31F}','\u{1F496}','\u{1F3C6}'];
+const CONFETTI_COLORS = ['#FF6B6B','#FECA57','#48DBFB','#1DD1A1','#A55EEA','#FF9F43','#E84393','#FD79A8'];
+const TOTAL_ROUNDS = 10;
+
+/* ==================== AUDIO ENGINE ==================== */
+class Audio {
+    constructor() { this.ctx = null; }
+
+    init() {
+        if (this.ctx) return;
+        try {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) {}
+    }
+
+    _play(freq, type, duration, vol = .25, ramp = .01) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(.001, this.ctx.currentTime + duration);
+        osc.connect(gain).connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + duration);
+    }
+
+    tap(index = 0) {
+        // Ascending xylophone notes based on tap index
+        const notes = [523, 587, 659, 698, 784, 880, 988, 1047, 1175, 1319]; // C5 up
+        const freq = notes[Math.min(index, notes.length - 1)];
+        this._play(freq, 'sine', .2, .2);
+        this._play(freq * 2, 'sine', .12, .06);
+    }
+
+    correct() {
+        // Rising 3-note arpeggio
+        const t = this.ctx ? this.ctx.currentTime : 0;
+        if (!this.ctx) return;
+        [523, 659, 784].forEach((f, i) => {
+            setTimeout(() => this._play(f, 'sine', .25, .2), i * 80);
+        });
+    }
+
+    wrong() {
+        // Gentle low boop
+        this._play(220, 'sine', .3, .15);
+    }
+
+    celebration() {
+        if (!this.ctx) return;
+        // Sparkle cascade
+        const notes = [784, 988, 1175, 1319, 1568];
+        notes.forEach((f, i) => {
+            setTimeout(() => {
+                this._play(f, 'sine', .3, .12);
+                this._play(f * 1.5, 'triangle', .2, .05);
+            }, i * 70);
+        });
+    }
+
+    menuTap() {
+        this._play(660, 'sine', .1, .12);
+    }
+}
+const audio = new Audio();
+
+/* ==================== GAME STATE ==================== */
+const G = {
+    mode: null,
+    round: 0,
+    stars: 0,
+    streak: 0,
+    transitioning: false,
+
+    // Math
+    num1: 0,
+    num2: 0,
+    answer: 0,
+    choices: [],
+};
+
+/* ==================== SCREEN MANAGEMENT ==================== */
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+}
+
+/* ==================== NAVIGATION ==================== */
+function goMenu() {
+    audio.init();
+    audio.menuTap();
+    showScreen('menu');
+}
+
+/* ==================== START GAME ==================== */
+function startGame(mode) {
+    audio.init();
+    audio.menuTap();
+    G.mode = mode;
+    G.round = 0;
+    G.stars = 0;
+    G.streak = 0;
+    G.transitioning = false;
+
+    showScreen('game');
+    updateHUD();
+    nextRound();
+}
+
+/* ==================== HUD ==================== */
+function updateHUD() {
+    const starsEl = document.getElementById('hud-stars');
+    let html = '';
+    for (let i = 0; i < TOTAL_ROUNDS; i++) {
+        const earned = i < G.stars;
+        html += `<span class="star-icon${earned ? ' earned' : ''}">${earned ? '\u2B50' : '\u2606'}</span>`;
+    }
+    starsEl.innerHTML = html;
+    document.getElementById('hud-progress').textContent = `${G.round} / ${TOTAL_ROUNDS}`;
+}
+
+/* ==================== ROUND MANAGEMENT ==================== */
+function nextRound() {
+    G.round++;
+    G.transitioning = false;
+    if (G.round > TOTAL_ROUNDS) { endGame(); return; }
+    updateHUD();
+
+    if (G.mode === 'learn') setupLearn();
+    else if (G.mode === 'add') setupMath('add');
+    else setupMath('subtract');
+}
+
+/* ==================== HELPER: PICK EMOJI ==================== */
+function pickEmoji() {
+    const cat = EMOJI_CATEGORIES[Math.floor(Math.random() * EMOJI_CATEGORIES.length)];
+    const set = EMOJIS[cat];
+    return set[Math.floor(Math.random() * set.length)];
+}
+
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/* ==================== LEARN NUMBERS ==================== */
+function getLearnRange() {
+    const d = getDifficulty();
+    if (d <= 1) return { min: 1, max: 5 };
+    if (d <= 2) return { min: 2, max: 7 };
+    return { min: 3, max: 10 };
+}
+
+function setupLearn() {
+    const range = getLearnRange();
+    const num = randInt(range.min, range.max);
+    G.answer = num;
+    G.choices = generateChoices(num);
+
+    const emoji = pickEmoji();
+    const area = document.getElementById('game-area');
+
+    let html = `<div class="instruction">How many ${emoji} do you see?</div>`;
+    html += `<div class="objects-grid">`;
+    for (let i = 0; i < num; i++) {
+        const delay = i * 60;
+        html += `<div class="obj-item static" style="animation-delay:${delay}ms">${emoji}</div>`;
+    }
+    html += `</div>`;
+
+    // Answer buttons
+    const btnClasses = ['opt-a', 'opt-b', 'opt-c'];
+    html += `<div class="answers-row">`;
+    G.choices.forEach((c, i) => {
+        html += `<button class="answer-btn ${btnClasses[i]}" onclick="checkAnswer(this, ${c})">${c}</button>`;
+    });
+    html += `</div>`;
+
+    area.innerHTML = html;
+}
+
+/* ==================== MATH MODES ==================== */
+function getDifficulty() {
+    if (G.streak < 3) return 1;
+    if (G.streak < 6) return 2;
+    return 3;
+}
+
+function generateMathProblem(mode) {
+    const d = getDifficulty();
+    let a, b;
+
+    if (mode === 'add') {
+        const maxSum = [5, 7, 10][d - 1];
+        a = randInt(1, Math.min(maxSum - 1, 5 + d));
+        b = randInt(1, maxSum - a);
+        return { num1: a, num2: b, answer: a + b };
+    } else {
+        const maxA = [5, 7, 10][d - 1];
+        a = randInt(2, maxA);
+        b = randInt(1, a - (a > 1 ? 1 : 0));
+        if (b >= a) b = a - 1;
+        if (b < 1) b = 1;
+        return { num1: a, num2: b, answer: a - b };
+    }
+}
+
+function generateChoices(correct) {
+    const choices = new Set([correct]);
+    const offsets = shuffle([1, -1, 2, -2, 3, -3]);
+    for (const off of offsets) {
+        if (choices.size >= 3) break;
+        const c = correct + off;
+        if (c >= 0 && c <= 12) choices.add(c);
+    }
+    // Fallback: fill with nearby numbers
+    let fill = 0;
+    while (choices.size < 3) {
+        if (!choices.has(fill) && fill >= 0) choices.add(fill);
+        fill++;
+    }
+    return shuffle([...choices]);
+}
+
+function setupMath(mode) {
+    const problem = generateMathProblem(mode);
+    G.num1 = problem.num1;
+    G.num2 = problem.num2;
+    G.answer = problem.answer;
+    G.choices = generateChoices(G.answer);
+
+    const emoji = pickEmoji();
+    const area = document.getElementById('game-area');
+    const op = mode === 'add' ? '+' : '\u2212';
+    const theme = mode === 'add' ? 'theme-mint' : 'theme-orange';
+
+    let html = '';
+
+    // Visual equation with emoji objects
+    html += `<div class="equation-visual">`;
+    html += `<div class="eq-group">`;
+    if (mode === 'subtract') {
+        // Show all objects, some crossed out
+        for (let i = 0; i < G.num1; i++) {
+            const crossed = i >= G.answer;
+            const delay = i * 50;
+            html += `<div class="obj-item static${crossed ? ' crossed' : ''}" style="animation-delay:${delay}ms">${emoji}</div>`;
+        }
+    } else {
+        for (let i = 0; i < G.num1; i++) {
+            const delay = i * 50;
+            html += `<div class="obj-item static" style="animation-delay:${delay}ms">${emoji}</div>`;
+        }
+    }
+    html += `</div>`;
+
+    if (mode === 'add') {
+        html += `<div class="eq-operator">${op}</div>`;
+        html += `<div class="eq-group">`;
+        for (let i = 0; i < G.num2; i++) {
+            const delay = (G.num1 + i) * 50;
+            html += `<div class="obj-item static" style="animation-delay:${delay}ms">${emoji}</div>`;
+        }
+        html += `</div>`;
+    }
+    html += `</div>`;
+
+    // Numeric equation
+    html += `<div class="equation-numbers">`;
+    html += `<span class="eq-num">${G.num1}</span>`;
+    html += `<span>${op}</span>`;
+    html += `<span class="eq-num">${G.num2}</span>`;
+    html += `<span>=</span>`;
+    html += `<span class="eq-question">?</span>`;
+    html += `</div>`;
+
+    // Answer buttons
+    const btnClasses = ['opt-a', 'opt-b', 'opt-c'];
+    html += `<div class="answers-row">`;
+    G.choices.forEach((c, i) => {
+        html += `<button class="answer-btn ${btnClasses[i]}" onclick="checkAnswer(this, ${c})">${c}</button>`;
+    });
+    html += `</div>`;
+
+    area.innerHTML = html;
+}
+
+function checkAnswer(btn, value) {
+    if (G.transitioning) return;
+
+    if (value === G.answer) {
+        G.transitioning = true;
+        G.stars++;
+        G.streak++;
+        btn.classList.add('correct-flash');
+        audio.correct();
+        updateHUD();
+        showFeedback(true);
+        celebrate();
+        setTimeout(nextRound, 1600);
+    } else {
+        G.streak = Math.max(0, G.streak - 1);
+        btn.classList.add('wrong-shake');
+        audio.wrong();
+        showFeedback(false);
+        setTimeout(() => btn.classList.remove('wrong-shake'), 400);
+    }
+}
+
+/* ==================== FEEDBACK ==================== */
+function showFeedback(correct) {
+    const el = document.getElementById('feedback');
+    el.className = 'feedback-msg';
+    if (correct) {
+        const msgs = ['Awesome!', 'Great job!', 'Yay!', 'Super!', 'Woohoo!', 'Perfect!'];
+        el.textContent = msgs[Math.floor(Math.random() * msgs.length)] + ' \u2B50';
+        el.classList.add('feedback-correct');
+    } else {
+        const msgs = ['Try again!', 'Almost!', 'One more try!', 'Not quite!'];
+        el.textContent = msgs[Math.floor(Math.random() * msgs.length)] + ' \u{1F60A}';
+        el.classList.add('feedback-wrong');
+    }
+    // Trigger animation
+    void el.offsetWidth;
+    el.classList.add('show');
+    setTimeout(() => { el.className = 'feedback-msg'; }, 800);
+}
+
+/* ==================== CELEBRATION ==================== */
+function celebrate() {
+    audio.celebration();
+    const container = document.getElementById('celebration');
+
+    // Confetti pieces
+    for (let i = 0; i < 35; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 150 + Math.random() * 250;
+        piece.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+        piece.style.setProperty('--ty', `${Math.sin(angle) * dist - 100}px`);
+        piece.style.setProperty('--rot', `${Math.random() * 720 - 360}deg`);
+        piece.style.setProperty('--size', `${6 + Math.random() * 10}px`);
+        piece.style.setProperty('--color', CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]);
+        piece.style.setProperty('--duration', `${.6 + Math.random() * .5}s`);
+        piece.style.setProperty('--delay', `${Math.random() * .15}s`);
+        container.appendChild(piece);
+    }
+
+    // Big emoji
+    const bigEmoji = document.createElement('div');
+    bigEmoji.className = 'big-emoji-burst';
+    bigEmoji.textContent = CELEBRATION_EMOJIS[Math.floor(Math.random() * CELEBRATION_EMOJIS.length)];
+    container.appendChild(bigEmoji);
+
+    // Cleanup
+    setTimeout(() => { container.innerHTML = ''; }, 1500);
+}
+
+/* ==================== END GAME / SUMMARY ==================== */
+function endGame() {
+    const pct = G.stars / TOTAL_ROUNDS;
+    let emoji, title, subtitle;
+    if (pct >= .9) {
+        emoji = '\u{1F3C6}'; title = 'Amazing!'; subtitle = 'You\'re a superstar!';
+    } else if (pct >= .7) {
+        emoji = '\u{1F31F}'; title = 'Great job!'; subtitle = 'You did so well!';
+    } else if (pct >= .5) {
+        emoji = '\u{1F60A}'; title = 'Good work!'; subtitle = 'Keep practicing!';
+    } else {
+        emoji = '\u{1F496}'; title = 'Nice try!'; subtitle = 'Let\'s play again!';
+    }
+
+    document.getElementById('summary-emoji').textContent = emoji;
+    document.getElementById('summary-title').textContent = title;
+    document.getElementById('summary-subtitle').textContent = subtitle;
+
+    const starsEl = document.getElementById('summary-stars');
+    let html = '';
+    for (let i = 0; i < TOTAL_ROUNDS; i++) {
+        const earned = i < G.stars;
+        const delay = i * 100;
+        html += `<span class="summary-star" style="animation-delay:${delay}ms">${earned ? '\u2B50' : '\u2606'}</span>`;
+    }
+    starsEl.innerHTML = html;
+
+    showScreen('summary');
+    if (pct >= .5) celebrate();
+}
+
+/* ==================== INIT ==================== */
+// Ensure audio context starts on first interaction
+document.addEventListener('pointerdown', () => audio.init(), { once: true });
+</script>
+</body>
+</html>
